@@ -1,0 +1,105 @@
+import { o as __toESM } from "../_runtime.mjs";
+import { t as supabase } from "./client-BmkySxaU.mjs";
+import { u as require_react } from "../_libs/@floating-ui/react-dom+[...].mjs";
+import { c as require_jsx_runtime } from "../_libs/@radix-ui/react-arrow+[...].mjs";
+import { T as CircleCheck, g as LoaderCircle, v as Dumbbell, w as CircleX } from "../_libs/lucide-react.mjs";
+import { _ as useNavigate } from "../_libs/@tanstack/react-router+[...].mjs";
+import { t as Route } from "./c._token-DLfgC-aM.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/c._token-DAnEx4h3.js
+var import_react = /* @__PURE__ */ __toESM(require_react());
+var import_jsx_runtime = require_jsx_runtime();
+function PublicCheckin() {
+	const { token } = Route.useParams();
+	const navigate = useNavigate();
+	const [status, setStatus] = (0, import_react.useState)("loading");
+	const [message, setMessage] = (0, import_react.useState)("");
+	(0, import_react.useEffect)(() => {
+		(async () => {
+			try {
+				const { data: { user } } = await supabase.auth.getUser();
+				if (!user) {
+					navigate({
+						to: "/auth",
+						search: { redirect: window.location.pathname }
+					});
+					return;
+				}
+				const [tenantId, memberId] = atob(token).split(":");
+				if (!tenantId || !memberId) throw new Error("Invalid QR");
+				const today = /* @__PURE__ */ new Date();
+				today.setHours(0, 0, 0, 0);
+				const { data: open } = await supabase.from("attendance").select("*").eq("member_id", memberId).is("check_out", null).gte("check_in", today.toISOString()).limit(1).maybeSingle();
+				const { data: member } = await supabase.from("members").select("full_name").eq("id", memberId).single();
+				if (open) {
+					const now = /* @__PURE__ */ new Date();
+					const dur = Math.round((now.getTime() - new Date(open.check_in).getTime()) / 6e4);
+					await supabase.from("attendance").update({
+						check_out: now.toISOString(),
+						duration_minutes: dur
+					}).eq("id", open.id);
+					setStatus("out");
+					setMessage(`${member?.full_name ?? "Member"} — ${dur} min session`);
+				} else {
+					await supabase.from("attendance").insert({
+						tenant_id: tenantId,
+						member_id: memberId,
+						method: "qr"
+					});
+					setStatus("in");
+					setMessage(`${member?.full_name ?? "Member"} — welcome!`);
+				}
+			} catch (e) {
+				setStatus("error");
+				setMessage(e.message ?? "Failed");
+			}
+		})();
+	}, [token, navigate]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "grid min-h-screen place-items-center bg-background p-4",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "w-full max-w-sm rounded-xl border border-border bg-card p-8 text-center",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dumbbell, { className: "mx-auto h-10 w-10 text-primary" }),
+				status === "loading" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "mx-auto mt-4 h-8 w-8 animate-spin text-muted-foreground" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "mt-2 text-sm text-muted-foreground",
+					children: "Processing…"
+				})] }),
+				status === "in" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "mx-auto mt-4 h-12 w-12 text-success" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-2 font-display text-2xl tracking-wide",
+						children: "CHECKED IN"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-sm text-muted-foreground",
+						children: message
+					})
+				] }),
+				status === "out" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "mx-auto mt-4 h-12 w-12 text-accent" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-2 font-display text-2xl tracking-wide",
+						children: "CHECKED OUT"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-sm text-muted-foreground",
+						children: message
+					})
+				] }),
+				status === "error" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleX, { className: "mx-auto mt-4 h-12 w-12 text-destructive" }),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-2 font-semibold",
+						children: "Error"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-sm text-muted-foreground",
+						children: message
+					})
+				] })
+			]
+		})
+	});
+}
+//#endregion
+export { PublicCheckin as component };
