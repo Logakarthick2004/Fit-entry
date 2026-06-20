@@ -203,6 +203,7 @@ npm run build
 Building modern fitness management solutions with React, TypeScript, and AI.
 
 ---
+<img width="1886" height="2623" alt="image" src="https://github.com/user-attachments/assets/2cb8a215-ac6f-407d-a54d-35049aa384b3" />
 
 ## 📜 License
 
